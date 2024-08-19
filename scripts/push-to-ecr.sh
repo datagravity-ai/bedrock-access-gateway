@@ -6,13 +6,14 @@
 
 
 # Define variables
-IMAGE_NAME="bedrock-proxy-api"
+IMAGE_NAME="bedrock-access-gateway"
 TAG="latest"
-AWS_REGIONS=("us-west-2") # List of AWS regions
+AWS_REGIONS=("us-west-1") # List of AWS regions
 #AWS_REGIONS=("us-east-1" "us-west-2" "eu-central-1" "ap-southeast-1" "ap-northeast-1") # List of AWS regions
 
 # Build Docker image
-docker build -t $IMAGE_NAME:$TAG ../src/
+docker build --platform linux/amd64 -t $IMAGE_NAME:$TAG -f ../src/Dockerfile_ecs ../src/ 
+# docker build --platform linux/amd64 -t $IMAGE_NAME:$TAG ../src/ 
 
 # Loop through each AWS region
 for REGION in "${AWS_REGIONS[@]}"
@@ -21,10 +22,10 @@ do
     ACCOUNT_ID=$(aws sts get-caller-identity --region $REGION --query Account --output text)
 
     # Create repository URI
-    REPOSITORY_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${IMAGE_NAME}"
+    REPOSITORY_URI="public.ecr.aws/anomalo/${IMAGE_NAME}"
 
     # Log in to ECR
-    aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+    # aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
 
     # Tag the image for the current region
     docker tag $IMAGE_NAME:$TAG $REPOSITORY_URI:$TAG
